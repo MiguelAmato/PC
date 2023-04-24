@@ -38,9 +38,14 @@ public class ClienteReceptor extends Thread{
 				}
 				fos.close();
 				in.close();
+				socket.close();
 			} catch (IOException e) {
 				e.printStackTrace();
 			}
 		}
+		
+		client.actualizarLista(file);
+		
+		
 	}
 }

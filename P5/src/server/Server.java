@@ -1,7 +1,6 @@
 package server;
 
 
-import java.io.File;
 import java.io.IOException;
 import java.net.ServerSocket;
 import java.util.ArrayList;
@@ -13,6 +12,7 @@ import java.util.concurrent.Semaphore;
 
 import cliente.User;
 import mensajes.Mensaje;
+import mensajes.ActualizarArchivos;
 import mensajes.EmpezarConexionP2P;
 import mensajes.EnviarDatosEmisor;
 import utils.Function2;
@@ -23,9 +23,7 @@ import utils.TipoMensaje;
 public class Server {
 	
 	public static final int PORT = 5555;
-	
-	private int contPort; // Este es un contador que se encargara de darle a los clientes su propio puerto para su serverSocket 
-	
+		
 	private ServerSocket serverSocket;
 	
 	private ServerMaps<TipoMensaje, Function2<Mensaje, ClientListener>> mapaFunciones; // Mapa que en base al mensaje llegado, ejecuta la funcion correspondiente
@@ -41,7 +39,6 @@ public class Server {
 	public Server() {
 		initMap();
 		lock = new LockTicket();
-		contPort = PORT + 1;
 	}
 	
 	public void start() {
@@ -67,10 +64,12 @@ public class Server {
 		mapaFunciones.put(TipoMensaje.DESCONECTAR, (x, y) -> desconectarCliente(x, y));
 		mapaFunciones.put(TipoMensaje.EMPEZAR_CONEXION_P2P, (x, y) -> empezarP2P((EmpezarConexionP2P)x, y));
 		mapaFunciones.put(TipoMensaje.ENVIAR_DATOS_EMISOR, (x, y) -> enviarDatosEmisor((EnviarDatosEmisor)x, y));
+		mapaFunciones.put(TipoMensaje.ACTUALIZAR_ARCHIVOS,(x,y) -> actualizarArchivos((ActualizarArchivos)x,y));
 		mapaConectados = new ServerMaps<String, User>();
 		mapaArchivos = new ServerMaps<String, List<User>>();
 		mapaOyentes = new ServerMaps<String, ClientListener>();
 	}
+
 
 
 	public void procesarMensaje(Mensaje mensajeRecibido, ClientListener listener) {
@@ -79,9 +78,7 @@ public class Server {
 	}
 	
 	public void conectarCliente(Mensaje mensaje, ClientListener listener) {
-		// HACER QUE NO TE PUEDAS REGISTRAR CON EL MISMO NOMBRE
 		
-		System.out.println(mensaje.getOrigen().getNombre() + " - Server");
 		if(mapaConectados.containsKey(mensaje.getOrigen().getNombre())) {
 			
 			listener.enviarUsuarioRepetido();
@@ -97,13 +94,7 @@ public class Server {
 			}
 			mapaOyentes.put(mensaje.getOrigen().getNombre(), listener);
 			System.out.println("Añadido al mapa el cliente: " + mensaje.getOrigen().getNombre());
-			lock.takeLock();
-			contPort++;
-			System.out.println("Puerto que se le dio: " + contPort);
-			lock.releaseLock();
-			listener.enviarPuerto(contPort);
 		}
-		
 	}
 	
 	public void listaConectados(Mensaje mensaje, ClientListener listener) {
@@ -120,7 +111,6 @@ public class Server {
 	private void empezarP2P(EmpezarConexionP2P mensaje, ClientListener listener) {
 		String archivo = mensaje.getFileName();
 		if(mapaArchivos.containsKey(archivo)) {
-			
 			mapaOyentes.get(mapaArchivos.get(archivo).get(0).getNombre()).enviarSolicitudDescarga(mensaje.getOrigen().getNombre(), archivo);
 		}
 		else {
@@ -129,8 +119,11 @@ public class Server {
 	}
 	
 	private void enviarDatosEmisor(EnviarDatosEmisor mensaje, ClientListener y) {
-		//System.out.println("Emisor: " + y.getId() + " Receptor: " + mapaOyentes.get(mensaje.getReceptor()).getId());
 		mapaOyentes.get(mensaje.getReceptor()).enviarDatosEmisor(mensaje);
+	}
+	
+	private void actualizarArchivos(ActualizarArchivos mensaje, ClientListener listener) {
+		mapaArchivos.get(mensaje.getArchivo()).add(mensaje.getOrigen());
 	}
 
 	public void desconectarCliente(Mensaje mensaje, ClientListener listener) {
@@ -191,5 +184,8 @@ public class Server {
 			return ret;
 		}
 	}
+	
+	
+
 
 }

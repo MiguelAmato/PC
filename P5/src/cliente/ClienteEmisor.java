@@ -32,7 +32,6 @@ public class ClienteEmisor extends Thread {
 	
 	public void run() {
 		try {
-			System.out.println("Hola estoy aqui");
 			File archivo = new File(emisor.getInfo().getDirectorio().getAbsolutePath() + "\\" + fileName);
 			FileInputStream in = new FileInputStream(archivo);
 			BufferedInputStream bin = new BufferedInputStream(in);
@@ -44,7 +43,9 @@ public class ClienteEmisor extends Thread {
 			}
 			out.flush();
 			bin.close();
+			out.close();
 			in.close();
+			
 		} catch (IOException e) {
 			e.printStackTrace();
 		}

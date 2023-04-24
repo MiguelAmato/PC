@@ -242,6 +242,10 @@ public class ClientView extends JFrame  {
 					fileButton.addActionListener(new ActionListener() {
 						public void actionPerformed(ActionEvent e) {
 							client.enviarMensaje(new EmpezarConexionP2P(file, client.getInfo()));
+							CardLayout cl1 = (CardLayout)(centerPanel.getLayout());
+							cl1.show(centerPanel, MENU);
+							CardLayout cl2 = (CardLayout)(bottomPanel.getLayout());
+							cl2.show(bottomPanel, DESCONECTAR);
 						}
 					});
 					filePanel.setPreferredSize(new Dimension(255, 50));
@@ -283,11 +287,8 @@ public class ClientView extends JFrame  {
 	
 	public void repetirNombre() {
 		String name = JOptionPane.showInputDialog("Usuario ya conectado, escribe tu nombre:");
-		//client.getInfo().setNombre(name);
-		//Conectar mensaje = new Conectar(client.getInfo());
-		//System.out.println(mensaje.getOrigen().getNombre() + "View");
 		client.probarNombre(name);
-
+		this.setTitle(name);
 	}
 
 }

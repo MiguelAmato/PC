@@ -64,7 +64,4 @@ public class User implements Serializable {
 	public void setListaArchivos(Set<String> listaArchivos) {
 		this.listaArchivos = listaArchivos;
 	}
-
-	
-	
 }

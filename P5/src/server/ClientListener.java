@@ -43,8 +43,6 @@ public class ClientListener extends Thread {
 	            
 				
 	            Mensaje mensajeRecibido = (Mensaje) in.readObject();
-	            if(mensajeRecibido.getTipo().equals(TipoMensaje.CONECTAR))
-	            	System.out.println(mensajeRecibido.getOrigen().getNombre() + " clientListener");
 	            server.procesarMensaje(mensajeRecibido, this);
 	            
 	            //in.close();

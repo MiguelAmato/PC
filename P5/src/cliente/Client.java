@@ -11,6 +11,7 @@ import java.net.Socket;
 import java.util.HashMap;
 import java.util.Map;
 
+import mensajes.ActualizarArchivos;
 import mensajes.Conectar;
 import mensajes.ConfirmarConectar;
 import mensajes.DarListaArchivos;
@@ -21,13 +22,12 @@ import mensajes.Mensaje;
 import mensajes.SolicitarConexionP2P;
 import mensajes.UsuarioRepetido;
 import utils.Function1;
+import utils.LockTicket;
 import utils.TipoMensaje;
 
 public class Client {
 	
 	public static final int SERVER_PORT = 5555;
-	
-	int port;
 	
 	Socket clientSocket;
 	
@@ -44,15 +44,18 @@ public class Client {
     private ClientView view;
     
     private Map<TipoMensaje, Function1<Mensaje>> mapaFunciones;
+    
+	private LockTicket lock;
+
 	
 	public Client(String name, File directorio) {
 		info = new User(name, directorio);
+		lock = new LockTicket();
 		initMaps();
 	}
 
 	private void initMaps() {
 		mapaFunciones = new HashMap<TipoMensaje, Function1<Mensaje>>();
-		mapaFunciones.put(TipoMensaje.CONFIRMAR_CONECTAR, (x) -> setPort((ConfirmarConectar) x));
 		mapaFunciones.put(TipoMensaje.DAR_LISTA_CLIENTES, (x) -> getListaClientes((DarListaClientes) x));
 		mapaFunciones.put(TipoMensaje.DAR_LISTA_ARCHIVOS, (x) -> getListaArchivos((DarListaArchivos)x));
 		mapaFunciones.put(TipoMensaje.FALLO_CONEXION_P2P, (x) -> falloConexion((FalloConexionP2P)x));
@@ -131,16 +134,7 @@ public class Client {
 	public void respuestaServer(Mensaje mensaje) {
 		mapaFunciones.get(mensaje.getTipo()).apply(mensaje);
 	}
-	
-	private void setPort(ConfirmarConectar mensaje) {
-		this.port = mensaje.getPort();
-		try {
-			p2pSocket = new ServerSocket(port);
-		} catch (IOException e) {
-			e.printStackTrace();
-		}
-	}
-	
+		
 	private void getListaClientes(DarListaClientes mensaje) {
 		view.mostrarPanelLista(mensaje.getListaConectados());
 	}
@@ -190,6 +184,21 @@ public class Client {
 
 	private void repetirRegistro(UsuarioRepetido x) {
 		view.repetirNombre();
+	}
+
+	public void actualizarLista(String file) {
+		lock.takeLock();
+		
+		User aux = info;
+		
+		info = new User(aux.getNombre(),aux.getDirectorio());
+		
+		lock.releaseLock();
+		
+		ActualizarArchivos mensaje = new ActualizarArchivos(file,this.info);
+		
+		enviarMensaje(mensaje);
+				
 	}
 
 }
