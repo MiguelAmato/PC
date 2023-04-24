@@ -28,7 +28,6 @@ public class MainClient {
 		});	
 		
 		client.start();
-		//client.escucharServidor();
 	}
 	
 	public static File getFile() {

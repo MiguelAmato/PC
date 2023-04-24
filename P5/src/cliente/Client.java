@@ -1,28 +1,25 @@
 package cliente;
 
 
-import java.io.DataInputStream;
-import java.io.DataOutputStream;
+
 import java.io.File;
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
-import java.net.InetAddress;
 import java.net.ServerSocket;
 import java.net.Socket;
-import java.nio.file.Files;
 import java.util.HashMap;
 import java.util.Map;
 
 import mensajes.Conectar;
 import mensajes.ConfirmarConectar;
-import mensajes.DarArchivo;
 import mensajes.DarListaArchivos;
 import mensajes.DarListaClientes;
 import mensajes.EnviarDatosEmisor;
 import mensajes.FalloConexionP2P;
 import mensajes.Mensaje;
 import mensajes.SolicitarConexionP2P;
+import mensajes.UsuarioRepetido;
 import utils.Function1;
 import utils.TipoMensaje;
 
@@ -61,6 +58,7 @@ public class Client {
 		mapaFunciones.put(TipoMensaje.FALLO_CONEXION_P2P, (x) -> falloConexion((FalloConexionP2P)x));
 		mapaFunciones.put(TipoMensaje.SOLICITAR_CONEXION_P2P, (x) -> conexionP2P((SolicitarConexionP2P)x));
 		mapaFunciones.put(TipoMensaje.ENVIAR_DATOS_EMISOR, (x) -> recibirDatosEmisor((EnviarDatosEmisor)x));
+		mapaFunciones.put(TipoMensaje.USUARIO_REPETIDO, (x) -> repetirRegistro((UsuarioRepetido)x));
 	}
 
 
@@ -88,7 +86,6 @@ public class Client {
 		
 	}
 	
-	
 	public void enviarMensaje(Mensaje mensaje) {
 		try {
 			out.writeObject(mensaje);
@@ -103,6 +100,20 @@ public class Client {
 		//in = new ObjectInputStream(clientSocket.getInputStream());
 		serverListener = new ServerListener(clientSocket,in, this);
 		serverListener.start();
+	}
+	
+	public void probarNombre(String name) {
+		User infoAux = info;
+		info = new User(name, infoAux.getDirectorio());
+		Conectar mensaje = new Conectar(info);
+		try {
+			out.writeObject(mensaje);
+			out.flush();
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		
 	}
 	
 	public void setView(ClientView view) {
@@ -177,5 +188,8 @@ public class Client {
 		}
 	}
 
+	private void repetirRegistro(UsuarioRepetido x) {
+		view.repetirNombre();
+	}
 
 }

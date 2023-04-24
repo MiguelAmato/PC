@@ -80,20 +80,29 @@ public class Server {
 	
 	public void conectarCliente(Mensaje mensaje, ClientListener listener) {
 		// HACER QUE NO TE PUEDAS REGISTRAR CON EL MISMO NOMBRE
-		mapaConectados.put(mensaje.getOrigen().getNombre(), mensaje.getOrigen());
-		for(String archivo : mensaje.getOrigen().getListaArchivos()) {
-			if (!mapaArchivos.containsKey(archivo)) {
-				mapaArchivos.put(archivo, new ArrayList<User>());
-			}
-			mapaArchivos.get(archivo).add(mensaje.getOrigen());
+		
+		System.out.println(mensaje.getOrigen().getNombre() + " - Server");
+		if(mapaConectados.containsKey(mensaje.getOrigen().getNombre())) {
+			
+			listener.enviarUsuarioRepetido();
 		}
-		mapaOyentes.put(mensaje.getOrigen().getNombre(), listener);
-		System.out.println("Añadido al mapa el cliente: " + mensaje.getOrigen().getNombre());
-		lock.takeLock();
-		contPort++;
-		System.out.println("Puerto que se le dio: " + contPort);
-		lock.releaseLock();
-		listener.enviarPuerto(contPort);
+		
+		else {
+			mapaConectados.put(mensaje.getOrigen().getNombre(), mensaje.getOrigen());
+			for(String archivo : mensaje.getOrigen().getListaArchivos()) {
+				if (!mapaArchivos.containsKey(archivo)) {
+					mapaArchivos.put(archivo, new ArrayList<User>());
+				}
+				mapaArchivos.get(archivo).add(mensaje.getOrigen());
+			}
+			mapaOyentes.put(mensaje.getOrigen().getNombre(), listener);
+			System.out.println("Añadido al mapa el cliente: " + mensaje.getOrigen().getNombre());
+			lock.takeLock();
+			contPort++;
+			System.out.println("Puerto que se le dio: " + contPort);
+			lock.releaseLock();
+			listener.enviarPuerto(contPort);
+		}
 		
 	}
 	

@@ -4,8 +4,10 @@ import java.io.File;
 import java.io.Serializable;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
-import java.util.ArrayList;
-import java.util.List;
+import java.util.HashSet;
+import java.util.Set;
+
+
 
 public class User implements Serializable {
 	
@@ -14,7 +16,7 @@ public class User implements Serializable {
 	String nombre;
 	InetAddress ip;
 	File directorio;
-	List<String> listaArchivos;
+	Set<String> listaArchivos;
 	
 	public User(String nombre, File directorio) {
 		this.nombre = nombre;
@@ -24,11 +26,12 @@ public class User implements Serializable {
 		} catch (UnknownHostException e) {
 			e.printStackTrace();
 		}
-		listaArchivos = new ArrayList<String>();
+		listaArchivos = new HashSet<String>();
 		for(File archivo : directorio.listFiles()) 
 			if (!archivo.isDirectory()) 
 				listaArchivos.add(archivo.getName());
 	}
+
 	
 	public String getNombre() {
 		return nombre;
@@ -54,11 +57,11 @@ public class User implements Serializable {
 		this.directorio = directorio;
 	}
 
-	public List<String> getListaArchivos() {
+	public Set<String> getListaArchivos() {
 		return listaArchivos;
 	}
 
-	public void setListaArchivos(List<String> listaArchivos) {
+	public void setListaArchivos(Set<String> listaArchivos) {
 		this.listaArchivos = listaArchivos;
 	}
 

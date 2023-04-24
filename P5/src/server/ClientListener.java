@@ -11,6 +11,7 @@ import mensajes.EnviarDatosEmisor;
 import mensajes.FalloConexionP2P;
 import mensajes.Mensaje;
 import mensajes.SolicitarConexionP2P;
+import mensajes.UsuarioRepetido;
 import utils.TipoMensaje;
 
 
@@ -40,8 +41,10 @@ public class ClientListener extends Thread {
 		try {
 			while(true) {		
 	            
+				
 	            Mensaje mensajeRecibido = (Mensaje) in.readObject();
-	            
+	            if(mensajeRecibido.getTipo().equals(TipoMensaje.CONECTAR))
+	            	System.out.println(mensajeRecibido.getOrigen().getNombre() + " clientListener");
 	            server.procesarMensaje(mensajeRecibido, this);
 	            
 	            //in.close();
@@ -130,6 +133,17 @@ public class ClientListener extends Thread {
 			EnviarDatosEmisor mensaje1 = new EnviarDatosEmisor(mensaje.getPort(), mensaje.getIp(), mensaje.getReceptor(), mensaje.getFile());
 			out.writeObject(mensaje1);
 			System.out.println("Llegue");
+			out.flush();
+			
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+	}
+	
+	public void enviarUsuarioRepetido() {
+		try {
+			UsuarioRepetido mensaje1 = new UsuarioRepetido();
+			out.writeObject(mensaje1);
 			out.flush();
 			
 		} catch (IOException e) {

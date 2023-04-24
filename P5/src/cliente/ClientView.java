@@ -5,11 +5,9 @@ import java.awt.CardLayout;
 import java.awt.Color;
 import java.awt.Dimension;
 import java.awt.FlowLayout;
-import java.awt.GridLayout;
 import java.awt.Toolkit;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
-import java.io.File;
 import java.util.Set;
 
 import javax.swing.BoxLayout;
@@ -24,6 +22,7 @@ import javax.swing.JTextField;
 import javax.swing.JToolBar;
 import javax.swing.border.EmptyBorder;
 
+import mensajes.Conectar;
 import mensajes.Descargar;
 import mensajes.Listar;
 import mensajes.EmpezarConexionP2P;
@@ -84,9 +83,7 @@ public class ClientView extends JFrame  {
 		bottomPanel = new JPanel(new CardLayout());
 		
 		menuPanelConfiguration();
-		
-		listaPanelConfiguration();
-		
+				
 		descargaPanelConfiguration();
 		
 		desconectarConfiguration();
@@ -164,10 +161,6 @@ public class ClientView extends JFrame  {
 		
 	}
 
-	private void listaPanelConfiguration() {
-
-	}
-
 	private void descargaPanelConfiguration() {
 		descargaPanel = new JPanel();
 		descargaPanel.setLayout(new BoxLayout(descargaPanel, BoxLayout.Y_AXIS));
@@ -240,22 +233,29 @@ public class ClientView extends JFrame  {
 			listaArchivosPanel.add(new JLabel("No hay archivos disponibles"));
 		}
 		else {
+			int cont = 0;
 			for(String file : listaArchivos) {
-				JPanel filePanel = new JPanel(new BorderLayout());
-				filePanel.setBorder(new EmptyBorder(5,5,5,5));
-				JButton fileButton = new JButton(file);
-				fileButton.addActionListener(new ActionListener() {
-					public void actionPerformed(ActionEvent e) {
-						client.enviarMensaje(new EmpezarConexionP2P(file, client.getInfo()));
-					}
-				});
-				fileButton.setPreferredSize(new Dimension(255, 50));
-				filePanel.add(fileButton);
-				listaArchivosPanel.add(filePanel);
+				if(!client.getInfo().getListaArchivos().contains(file)) {
+					JPanel filePanel = new JPanel(new BorderLayout());
+					filePanel.setBorder(new EmptyBorder(5,5,5,5));
+					JButton fileButton = new JButton(file);
+					fileButton.addActionListener(new ActionListener() {
+						public void actionPerformed(ActionEvent e) {
+							client.enviarMensaje(new EmpezarConexionP2P(file, client.getInfo()));
+						}
+					});
+					filePanel.setPreferredSize(new Dimension(255, 50));
+					filePanel.add(fileButton);
+					listaArchivosPanel.add(filePanel);
+					cont++;
+				}
 			}
-			int cont = listaArchivos.size();
+			
 			while(cont < 5) {
-				listaArchivosPanel.add(new JPanel());
+				JPanel panelAux = new JPanel();
+				panelAux.setPreferredSize(new Dimension(255, 50));
+				panelAux.setVisible(true);
+				listaArchivosPanel.add(panelAux);
 				cont++;
 			}
 		}
@@ -280,6 +280,14 @@ public class ClientView extends JFrame  {
 		CardLayout cl2 = (CardLayout)(bottomPanel.getLayout());
 		cl2.show(bottomPanel, DESCONECTAR);
 	}
+	
+	public void repetirNombre() {
+		String name = JOptionPane.showInputDialog("Usuario ya conectado, escribe tu nombre:");
+		//client.getInfo().setNombre(name);
+		//Conectar mensaje = new Conectar(client.getInfo());
+		//System.out.println(mensaje.getOrigen().getNombre() + "View");
+		client.probarNombre(name);
 
+	}
 
 }
