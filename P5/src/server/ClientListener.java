@@ -37,22 +37,22 @@ public class ClientListener extends Thread {
 	}
 
 	@Override
-	public void run() { // cerrar el in y el out
+	public void run() { 
 		try {
-			while(true) {		
-	            
-				
+			while(!clientSocket.isClosed()) {
 	            Mensaje mensajeRecibido = (Mensaje) in.readObject();
 	            server.procesarMensaje(mensajeRecibido, this);
-	            
-	            //in.close();
-			}
-	          
+	            if(mensajeRecibido.getTipo().equals(TipoMensaje.DESCONECTAR)) {
+	            	in.close();
+					out.close();
+					clientSocket.close();
+	            	break;
+	            }
+			}	          
 		} 
 		catch (IOException | ClassNotFoundException e) {
-			System.out.println(e.getMessage() + " (ClientListener)");
+			e.printStackTrace();
 		}
-		
 	}
 
 	public void enviarLista(Set<String> lista) {
@@ -130,7 +130,6 @@ public class ClientListener extends Thread {
 		try {
 			EnviarDatosEmisor mensaje1 = new EnviarDatosEmisor(mensaje.getPort(), mensaje.getIp(), mensaje.getReceptor(), mensaje.getFile());
 			out.writeObject(mensaje1);
-			System.out.println("Llegue");
 			out.flush();
 			
 		} catch (IOException e) {

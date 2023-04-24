@@ -11,12 +11,13 @@ import java.util.Set;
 import java.util.concurrent.Semaphore;
 
 import cliente.User;
+import jdk.internal.misc.FileSystemOption;
 import mensajes.Mensaje;
 import mensajes.ActualizarArchivos;
+import mensajes.Desconectar;
 import mensajes.EmpezarConexionP2P;
 import mensajes.EnviarDatosEmisor;
 import utils.Function2;
-import utils.LockTicket;
 import utils.TipoMensaje;
 
 
@@ -33,12 +34,9 @@ public class Server {
 	private ServerMaps<String, List<User>> mapaArchivos;
 	
 	private ServerMaps<String, ClientListener> mapaOyentes;
-	
-	private LockTicket lock;
-	
+		
 	public Server() {
 		initMap();
-		lock = new LockTicket();
 	}
 	
 	public void start() {
@@ -61,7 +59,7 @@ public class Server {
 		mapaFunciones.put(TipoMensaje.CONECTAR, (x, y) -> conectarCliente(x, y));
 		mapaFunciones.put(TipoMensaje.LISTAR, (x, y) -> listaConectados(x, y));
 		mapaFunciones.put(TipoMensaje.DESCARGAR, (x, y) -> iniciaDescargarArchivo(x, y));
-		mapaFunciones.put(TipoMensaje.DESCONECTAR, (x, y) -> desconectarCliente(x, y));
+		mapaFunciones.put(TipoMensaje.DESCONECTAR, (x, y) -> quitarCliente((Desconectar)x, y));
 		mapaFunciones.put(TipoMensaje.EMPEZAR_CONEXION_P2P, (x, y) -> empezarP2P((EmpezarConexionP2P)x, y));
 		mapaFunciones.put(TipoMensaje.ENVIAR_DATOS_EMISOR, (x, y) -> enviarDatosEmisor((EnviarDatosEmisor)x, y));
 		mapaFunciones.put(TipoMensaje.ACTUALIZAR_ARCHIVOS,(x,y) -> actualizarArchivos((ActualizarArchivos)x,y));
@@ -69,7 +67,6 @@ public class Server {
 		mapaArchivos = new ServerMaps<String, List<User>>();
 		mapaOyentes = new ServerMaps<String, ClientListener>();
 	}
-
 
 
 	public void procesarMensaje(Mensaje mensajeRecibido, ClientListener listener) {
@@ -93,7 +90,6 @@ public class Server {
 				mapaArchivos.get(archivo).add(mensaje.getOrigen());
 			}
 			mapaOyentes.put(mensaje.getOrigen().getNombre(), listener);
-			System.out.println("Añadido al mapa el cliente: " + mensaje.getOrigen().getNombre());
 		}
 	}
 	
@@ -126,8 +122,18 @@ public class Server {
 		mapaArchivos.get(mensaje.getArchivo()).add(mensaje.getOrigen());
 	}
 
-	public void desconectarCliente(Mensaje mensaje, ClientListener listener) {
+	public void quitarCliente(Desconectar mensaje, ClientListener clientListener) {
+		for(String file: mapaConectados.get(mensaje.getOrigen().getNombre()).getListaArchivos()) {
+			mapaArchivos.get(file).remove(mapaConectados.get(mensaje.getOrigen().getNombre()));
+			if(mapaArchivos.get(file).isEmpty()) {
+				mapaArchivos.remove(file);
+			}
+		}
+		mapaOyentes.remove(mensaje.getOrigen().getNombre());
+		mapaConectados.remove(mensaje.getOrigen().getNombre());	
+		
 	}
+	
 	
 	private static class ServerMaps<C,V> {
 		private Map<C,V> map;
@@ -160,6 +166,16 @@ public class Server {
 			s.release();
 		}
 		
+		public void remove(C clave) {
+			try {
+				s.acquire();
+			} catch (InterruptedException e) {
+				e.printStackTrace();
+			}
+			map.remove(clave);
+			s.release();
+		}
+		
 		public Set<C> keySet() {
 			Set<C> keys;
 			try {
@@ -184,6 +200,8 @@ public class Server {
 			return ret;
 		}
 	}
+
+	
 	
 	
 

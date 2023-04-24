@@ -12,7 +12,7 @@ public class FalloConexionP2P extends Mensaje{
 
 	@Override
 	public TipoMensaje getTipo() {
-		return null;
+		return TipoMensaje.FALLO_CONEXION_P2P;
 	}
 
 }

@@ -174,6 +174,7 @@ public class ClientView extends JFrame  {
 		desconectarButton.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
 				client.desconectar();
+				System.exit(0);
 			}
 		});
 		
@@ -278,7 +279,7 @@ public class ClientView extends JFrame  {
 	}
 
 	public void falloDescarga() {
-		JOptionPane.showConfirmDialog(new JPanel(),"Fallo en descarga: Archivo no disponible");
+		JOptionPane.showMessageDialog(null, "Archivo no disponible", "Error", JOptionPane.ERROR_MESSAGE);
 		CardLayout cl1 = (CardLayout)(centerPanel.getLayout());
 		cl1.show(centerPanel, MENU);
 		CardLayout cl2 = (CardLayout)(bottomPanel.getLayout());

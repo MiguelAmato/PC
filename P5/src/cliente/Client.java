@@ -13,9 +13,9 @@ import java.util.Map;
 
 import mensajes.ActualizarArchivos;
 import mensajes.Conectar;
-import mensajes.ConfirmarConectar;
 import mensajes.DarListaArchivos;
 import mensajes.DarListaClientes;
+import mensajes.Desconectar;
 import mensajes.EnviarDatosEmisor;
 import mensajes.FalloConexionP2P;
 import mensajes.Mensaje;
@@ -75,7 +75,8 @@ public class Client {
 			in = new ObjectInputStream(clientSocket.getInputStream());
 			
 			Conectar mensaje = new Conectar(info);
-			
+			p2pSocket = new ServerSocket(0);
+
 			out.writeObject(mensaje);
 			
 			out.flush();
@@ -124,7 +125,21 @@ public class Client {
 	}
 
 	public void desconectar() {
-		
+		try {
+			p2pSocket.close();
+			Desconectar mensaje = new Desconectar(info);
+			enviarMensaje(mensaje);
+			try {
+				serverListener.join();
+			} catch (InterruptedException e) {
+				e.printStackTrace();
+			}
+			in.close();
+			out.close();
+			clientSocket.close();
+		} catch (IOException e) {
+			e.printStackTrace();
+		}	
 	}
 	
 	public User getInfo() {
@@ -139,8 +154,6 @@ public class Client {
 		view.mostrarPanelLista(mensaje.getListaConectados());
 	}
 		
-	
-
 	private void getListaArchivos(DarListaArchivos mensaje) {
 		view.mostrarPanelListaArchivos(mensaje.getListaArchivos());
 	}
@@ -152,13 +165,10 @@ public class Client {
 
 	private void conexionP2P(SolicitarConexionP2P x) {
 		try {
-			p2pSocket = new ServerSocket(0);
 			
 			enviarMensaje(new EnviarDatosEmisor(p2pSocket.getLocalPort(), info.getIp(), x.getReceptor(), x.getFileName()));
-			System.out.println("Despues del serverSocket " + info.getIp() + p2pSocket.getLocalPort());
 			
 			Socket socket = p2pSocket.accept();
-			System.out.println("Server acepto el socket ");
 			
 			new ClienteEmisor(socket, this, x.getFileName()).start();
 			
@@ -174,7 +184,6 @@ public class Client {
 		try {
 			
 			Socket socket = new Socket(mensaje.getIp(), mensaje.getPort());
-			System.out.println("Despues del socket " + mensaje.getIp() + mensaje.getPort());
 			new ClienteReceptor(socket, mensaje.getFile(),this).start();
 			
 		} catch (IOException e) {
